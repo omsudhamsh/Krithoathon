@@ -183,18 +183,6 @@ const ClassificationDetail: React.FC = () => {
                     </div>
                   )}
                   
-                  {detailedData.details.environmentalImpact && (
-                    <div className="flex items-start">
-                      <div className="flex items-center w-7 h-7 rounded-full bg-blue-100 justify-center flex-shrink-0">
-                        <Leaf size={16} className="text-blue-600" />
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-gray-900">Environmental Impact</h3>
-                        <p className="mt-1 text-sm text-gray-600">{detailedData.details.environmentalImpact}</p>
-                      </div>
-                    </div>
-                  )}
-                  
                   {detailedData.details.disposalMethod && (
                     <div className="flex items-start">
                       <div className="flex items-center w-7 h-7 rounded-full bg-blue-100 justify-center flex-shrink-0">

@@ -166,19 +166,30 @@ export const generateWasteTrends = (): WasteTrend[] => {
 // Generate data for CSV export
 export const generateCSVData = (classifications: any[]): string => {
   // CSV header
-  let csv = 'ID,Date,Waste Type,Category,Accuracy,Recyclable,Biodegradable,Hazardous\n';
+  let csv = 'ID,Date,Waste Type,Category,Accuracy,Recyclable,Biodegradable,Hazardous,CO2_Impact,Water_Saved,Energy_Saved\n';
   
   // Add rows
   classifications.forEach(item => {
+    // Calculate estimated environmental impact for this item
+    const isRecyclable = item.category === 'Recyclable';
+    const isBiodegradable = item.category === 'Biodegradable';
+    const avgWeightPerItem = 0.2; // kg per waste item
+    const co2Impact = isRecyclable ? (avgWeightPerItem * 2.5) : (isBiodegradable ? (avgWeightPerItem * 0.5) : 0);
+    const waterSaved = isRecyclable ? (avgWeightPerItem * 1000) : 0; // 1000L of water per kg of recycled material
+    const energySaved = isRecyclable ? (avgWeightPerItem * 5) : 0; // 5 kWh per kg of recycled material
+    
     const row = [
       item.id,
       new Date(item.timestamp).toISOString(),
       item.wasteType,
       item.category,
       `${item.accuracy}%`,
-      item.category === 'Recyclable' ? 'Yes' : 'No',
-      item.category === 'Biodegradable' ? 'Yes' : 'No',
-      'No' // Assuming none are hazardous in this demo
+      isRecyclable ? 'Yes' : 'No',
+      isBiodegradable ? 'Yes' : 'No',
+      'No', // Assuming none are hazardous in this demo
+      co2Impact.toFixed(2), // CO2 impact in kg
+      waterSaved.toFixed(0), // Water saved in liters
+      energySaved.toFixed(2) // Energy saved in kWh
     ];
     
     csv += row.join(',') + '\n';
@@ -200,4 +211,9 @@ export const downloadCSV = (data: string, filename: string = 'waste-classificati
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  
+  // Release the blob URL after download
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 100);
 }; 

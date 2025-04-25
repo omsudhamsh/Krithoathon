@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Upload, Image, FileVideo, Trash2, UploadCloud, Check, Info, Leaf, Clock, AlertTriangle, Recycle } from 'lucide-react';
-import { simulateClassification } from '../../utils/wasteClassificationSimulator';
 import { useWasteData } from '../../context/WasteDataContext';
+import axios from 'axios';
+
+// API base URL
+const API_BASE_URL = 'http://localhost:5000';
 
 const WasteUploader: React.FC = () => {
   const [dragActive, setDragActive] = useState<boolean>(false);
@@ -10,6 +13,7 @@ const WasteUploader: React.FC = () => {
   const [isClassifying, setIsClassifying] = useState<boolean>(false);
   const [classificationResult, setClassificationResult] = useState<any>(null);
   const [isDetailExpanded, setIsDetailExpanded] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const { addClassification } = useWasteData();
 
   const handleDrag = (e: React.DragEvent) => {
@@ -40,6 +44,15 @@ const WasteUploader: React.FC = () => {
   };
 
   const handleFiles = (file: File) => {
+    // Reset error state
+    setError(null);
+    
+    // Make sure it's an image file
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+    
     setSelectedFile(file);
     
     // Create a preview
@@ -59,48 +72,45 @@ const WasteUploader: React.FC = () => {
     setPreviewUrl(null);
     setClassificationResult(null);
     setIsDetailExpanded(false);
+    setError(null);
   };
 
   const classifyWaste = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !previewUrl) return;
     
     setIsClassifying(true);
+    setError(null);
     
     try {
-      // Simulate API call to classify waste
-      setTimeout(() => {
-        const result = simulateClassification(selectedFile.name);
-        setClassificationResult(result);
-        
-        // Add to recent classifications
-        addClassification({
-          id: Date.now().toString(),
-          timestamp: new Date().toISOString(),
-          imageUrl: previewUrl,
-          category: result.category,
-          accuracy: result.accuracy,
-          wasteType: result.details.wasteType
-        });
-        
-        setIsClassifying(false);
-      }, 2000);
+      // Send image to server for classification
+      const imageData = previewUrl;
+      const response = await axios.post(`${API_BASE_URL}/api/classify`, {
+        image: imageData
+      });
+      
+      const result = response.data;
+      setClassificationResult(result);
+      
+      // Add to recent classifications
+      addClassification({
+        id: Date.now().toString(),
+        timestamp: new Date().toISOString(),
+        imageUrl: previewUrl || '',
+        category: result.category,
+        accuracy: result.accuracy,
+        wasteType: result.wasteType
+      });
+      
+      setIsClassifying(false);
     } catch (error) {
       console.error("Classification failed:", error);
+      setError("Failed to classify image. Please try again.");
       setIsClassifying(false);
     }
   };
 
   const getFileIcon = () => {
-    if (!selectedFile) return <UploadCloud size={40} className="text-gray-300" />;
-    
-    const fileType = selectedFile.type;
-    if (fileType.startsWith('image/')) {
-      return <Image size={40} className="text-blue-500" />;
-    } else if (fileType.startsWith('video/')) {
-      return <FileVideo size={40} className="text-purple-500" />;
-    }
-    
-    return <FileVideo size={40} className="text-gray-500" />;
+    return <UploadCloud size={40} className="text-blue-500" />;
   };
 
   const getCategoryColor = (category: string) => {
@@ -124,6 +134,12 @@ const WasteUploader: React.FC = () => {
     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">Waste Classification</h2>
       
+      {error && (
+        <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4">
+          {error}
+        </div>
+      )}
+      
       {!selectedFile ? (
         <div 
           className={`border-2 border-dashed rounded-lg p-6 transition-all ${
@@ -140,12 +156,12 @@ const WasteUploader: React.FC = () => {
               <span className="font-medium text-gray-700">Click to upload</span> or drag and drop
             </p>
             <p className="text-xs text-gray-400">
-              Supported formats: JPG, PNG, WEBP, MP4 (max 20MB)
+              Supported formats: JPG, PNG, WEBP (max 5MB)
             </p>
             <input
               type="file"
               className="hidden"
-              accept="image/*,video/*"
+              accept="image/*"
               onChange={handleChange}
               id="waste-file-upload"
             />
@@ -215,7 +231,7 @@ const WasteUploader: React.FC = () => {
                     </div>
                     <div className="flex justify-between items-center mt-2">
                       <p className="text-sm font-medium text-gray-700">
-                      Waste Type: {classificationResult.details.wasteType}
+                      Waste Type: {classificationResult.wasteType}
                     </p>
                       <button 
                         onClick={toggleDetailExpansion} 
@@ -283,22 +299,6 @@ const WasteUploader: React.FC = () => {
                               <span>Disposal:</span>
                             </span>
                             <span className="text-gray-800">{classificationResult.details.disposalMethod}</span>
-                          </div>
-                        )}
-                        
-                        {classificationResult.details.composting && classificationResult.details.composting.suitable && (
-                          <div className="mt-2 bg-green-50 p-2 rounded-md">
-                            <p className="text-sm font-medium text-green-800 mb-1">Composting Information</p>
-                            <div className="space-y-1 text-xs">
-                              <div className="flex">
-                                <span className="text-gray-600 w-24 flex-shrink-0">Time to compost:</span>
-                                <span className="text-gray-800">{classificationResult.details.composting.timeToCompost}</span>
-                              </div>
-                              <div className="flex">
-                                <span className="text-gray-600 w-24 flex-shrink-0">Nutrient value:</span>
-                                <span className="text-gray-800">{classificationResult.details.composting.nutrientValue}</span>
-                              </div>
-                            </div>
                           </div>
                         )}
                       </div>

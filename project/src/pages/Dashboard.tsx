@@ -5,12 +5,12 @@ import RecentClassifications from '../components/dashboard/RecentClassifications
 import WasteUploader from '../components/dashboard/WasteUploader';
 import RobotArmSimulation from '../components/dashboard/RobotArmSimulation';
 import AccuracyTrendChart from '../components/dashboard/AccuracyTrendChart';
-import EcoImpactStats from '../components/dashboard/EcoImpactStats';
 import LiveFeed from '../components/dashboard/LiveFeed';
 import AIPerformanceMetrics from '../components/dashboard/AIPerformanceMetrics';
 import BinLevels from '../components/dashboard/BinLevels';
 import SystemHealth from '../components/dashboard/SystemHealth';
 import WasteTrends from '../components/dashboard/WasteTrends';
+import WebcamCapture from '../components/dashboard/WebcamCapture';
 import { DownloadIcon, RefreshCw } from 'lucide-react';
 import { useWasteData } from '../context/WasteDataContext';
 
@@ -41,8 +41,6 @@ const Dashboard: React.FC = () => {
       
       <StatsCards />
       
-      <EcoImpactStats />
-      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <WasteDistributionChart />
         <AccuracyTrendChart />
@@ -59,6 +57,7 @@ const Dashboard: React.FC = () => {
           <SystemHealth />
         </div>
         <div className="space-y-6">
+          <WebcamCapture />
           <WasteUploader />
           <BinLevels />
         </div>
