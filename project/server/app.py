@@ -67,7 +67,8 @@ CNN_CLASS_NAMES = ['Recyclable', 'Biodegradable', 'Non-recyclable']
 webcam = None
 
 # Dataset path
-DATASET_PATH = "C:/Users/omsud/Downloads/archive/DATASET/TRAIN/"
+# DATASET_PATH = "C:/Users/omsud/Downloads/archive/DATASET/TRAIN/"
+DATASET_PATH = "DATASET/TRAIN/"
 RECYCLABLE_PATH = os.path.join(DATASET_PATH, "R")
 ORGANIC_PATH = os.path.join(DATASET_PATH, "O")  # Assuming O is for organic/biodegradable
 NON_RECYCLABLE_PATH = os.path.join(DATASET_PATH, "N")  # Assuming N is for non-recyclable
